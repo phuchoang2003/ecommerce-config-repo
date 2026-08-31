@@ -1,0 +1,208 @@
+## =============================================================================
+## hdp-order-service.yml — full self-contained config for order-service.
+## Profile=default. Loaded by Spring Cloud Config Server via {application}.
+##
+## Duplicates shared defaults from other services by intent (simpler to read,
+## no cross-file imports). When you want to change JPA settings across services,
+## edit each service file.
+## =============================================================================
+
+spring:
+  application:
+    name: order-service
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/order_db}
+    username: ${DB_USERNAME:hdp_user}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      initialization-fail-timeout: 1
+      pool-name: HikariCP-Order
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      connection-timeout: 30000
+      validation-timeout: 5000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      keepalive-time: 100000
+      auto-commit: false
+      data-source-properties:
+        reWriteBatchedInserts: true
+        binaryTransfer: true
+        tcpKeepAlive: true
+        preparedStatementCacheQueries: 256
+        preparedStatementCacheSizeMiB: 5
+        prepareThreshold: 3
+        socketTimeout: 30
+        connectTimeout: 10
+        stringtype: unspecified
+
+  data.redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DB:0}
+    timeout: 2s
+    lettuce:
+      shutdown-timeout: 100ms
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      missing-topics-fatal: true
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:order-service-group}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      properties:
+        allow.auto.create.topics: false
+    producer:
+      properties:
+        allow.auto.create.topics: true
+
+  jpa:
+    open-in-view: false
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        highlight_sql: false
+        order_inserts: true
+        order_updates: true
+        type:
+          json_format: canonical
+        jdbc:
+          time-zone: UTC
+          batch_size: ${JPA_BATCH_SIZE:15}
+          batch_versioned_data: true
+        query:
+          query-plan-cache-max-size: ${JPA_QUERY_PLAN_CACHE_MAX_SIZE:4096}
+          in_clause_parameter_padding: true
+          fail_on_pagination_over_collection_fetch: true
+        connection:
+          provider_disables_autocommit: true
+        generate_statistics: ${JPA_GENERATE_STATISTICS:false}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    clean-disabled: true
+
+  threads.virtual:
+    enabled: ${VIRTUAL_THREADS_ENABLED:true}
+  main:
+    keep-alive: true
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  servlet:
+    context-path: ${CONTEXT_PATH:/api}
+  tomcat:
+    remoteip:
+      remote-ip-header: x-forwarded-for
+      protocol-header: x-forwarded-for-proto
+  compression:
+    enabled: ${COMPRESSION_ENABLED:true}
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: ${GZIP_MIN_RESPONSE_SIZE:1024}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  observations:
+    annotations:
+      enabled: true
+
+decorator:
+  datasource:
+    datasource-proxy:
+      multiline: false
+
+hdp:
+  messaging:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+    consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:order-service-group}
+    auto-offset-reset: earliest
+    specific-avro-reader: ${KAFKA_SPECIFIC_AVRO_READER:true}
+
+app:
+  info:
+    service-name: ${spring.application.name}
+    environment:  ${ENVIRONMENT:development}
+    version:      ${VERSION:0.0.1-SNAPSHOT}
+    build:        ${VERSION:0.0.1-SNAPSHOT}
+  observability:
+    application:  ${spring.application.name}
+    environment:  ${ENVIRONMENT:development}
+    version:      ${VERSION:0.0.1-SNAPSHOT}
+  swagger:
+    title:           "HDP Order Service API"
+    version:         "1.0.0"
+    description:     "API documentation for HDP Order Service"
+    contact-name:    "HDP Order Team"
+    contact-email:   "order@hdp.com"
+    license-name:    "Proprietary"
+    license-url:     "https://hdp.com/license"
+    server-url:      /api/v1
+    server-description: "Order Service API Server"
+    property-naming-strategy: SNAKE_CASE
+  logging:
+    request:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+
+info:
+  app:
+    cpu-pool:
+      core-size:          ${CORE_POOL_SIZE:4}
+      max-size:           ${MAX_POOL_SIZE:8}
+      queue-capacity:     ${QUEUE_CAPACITY:50}
+      keep-alive-seconds: ${KEEP_ALIVE_SECONDS:60}
+
+logging:
+  level:
+    root:                      ${LOGGING_ROOT:INFO}
+    com.hdp:                   ${LOGGING_APP:INFO}
+    org.springframework:       ${LOGGING_SPRING:WARN}
+    org.apache.kafka:          ${LOGGING_KAFKA:OFF}
+    org.springframework.cache: ${LOGGING_CACHE:WARN}
+    com.zaxxer.hikari:         INFO

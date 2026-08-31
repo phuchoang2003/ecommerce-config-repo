@@ -1,0 +1,34 @@
+## hdp-order-service-test.yml — integration test profile.
+## Active when SPRING_PROFILES_ACTIVE contains `test`.
+##
+## - Kafka listener auto-startup OFF (we drive dispatcher manually)
+## - Hibernate ddl-auto `update` for Testcontainers Postgres mapping verification
+## - Flyway clean allowed for test DB cleanup
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        generate_statistics: false
+
+  flyway:
+    clean-disabled: false
+
+  kafka:
+    listener:
+      auto-startup: false
+
+hdp:
+  messaging:
+    bootstrap-servers: localhost:9092
+    schema-registry-url: http://localhost:8085
+    consumer-group-id: order-service-test
+    auto-offset-reset: earliest
+
+logging:
+  level:
+    org.springframework.kafka: WARN
+    org.apache.kafka:          WARN
+    com.hdp:                   INFO

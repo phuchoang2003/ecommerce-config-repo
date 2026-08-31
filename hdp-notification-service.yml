@@ -1,0 +1,123 @@
+## =============================================================================
+## hdp-notification-service.yml — full self-contained config for notification.
+## Kafka consumer only; no DB, no Redis, no AWS, no JPA.
+## =============================================================================
+
+spring:
+  application:
+    name: notification-service
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      auto-startup: true
+      missing-topics-fatal: true
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:notification-service-group}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      properties:
+        allow.auto.create.topics: false
+
+  threads.virtual:
+    enabled: true
+    initial-size: 1
+    max-size: 1
+    core-size: 1
+  main:
+    keep-alive: true
+
+server:
+  port: ${PORT:8084}
+  shutdown: graceful
+  servlet:
+    context-path: ${CONTEXT_PATH:/api}
+  tomcat:
+    remoteip:
+      remote-ip-header: x-forwarded-for
+      protocol-header: x-forwarded-for-proto
+  compression:
+    enabled: ${COMPRESSION_ENABLED:true}
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: ${GZIP_MIN_RESPONSE_SIZE:1024}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  observations:
+    annotations:
+      enabled: true
+
+hdp:
+  messaging:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    schema-registry-url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+    consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:notification-service-group}
+    auto-offset-reset: earliest
+
+app:
+  info:
+    service-name: ${spring.application.name}
+    environment:  ${ENVIRONMENT:development}
+    version:      ${VERSION:0.0.1-SNAPSHOT}
+    build:        ${VERSION:0.0.1-SNAPSHOT}
+  observability:
+    application:  ${spring.application.name}
+    environment:  ${ENVIRONMENT:development}
+    version:      ${VERSION:0.0.1-SNAPSHOT}
+  swagger:
+    title:           "HDP Notification Service API"
+    version:         "1.0.0"
+    description:     "API documentation for HDP Notification Service"
+    contact-name:    "HDP Notification Team"
+    contact-email:   "notification@hdp.com"
+    license-name:    "Proprietary"
+    license-url:     "https://hdp.com/license"
+    server-url:      /api/v1
+    server-description: "Notification Service API Server"
+    property-naming-strategy: SNAKE_CASE
+  logging:
+    request:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+
+info:
+  app:
+    cpu-pool:
+      core-size:          ${CORE_POOL_SIZE:4}
+      max-size:           ${MAX_POOL_SIZE:8}
+      queue-capacity:     ${QUEUE_CAPACITY:50}
+      keep-alive-seconds: ${KEEP_ALIVE_SECONDS:60}
+
+logging:
+  level:
+    root:                      ${LOGGING_ROOT:INFO}
+    com.hdp:                   ${LOGGING_APP:INFO}
+    org.springframework:       ${LOGGING_SPRING:WARN}
+    org.apache.kafka:          ${LOGGING_KAFKA:OFF}
+    org.springframework.cache: ${LOGGING_CACHE:WARN}

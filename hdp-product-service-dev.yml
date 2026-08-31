@@ -1,0 +1,12 @@
+## hdp-product-service-dev.yml — DEV profile overrides.
+
+logging:
+  level:
+    com.hdp:                   DEBUG
+    net.ttddyy.dsproxy.listener:  DEBUG
+    org.springframework.web.cors: DEBUG
+    org.springframework.web.filter: DEBUG
+
+app:
+  info:
+    environment: development

@@ -1,0 +1,9 @@
+## hdp-notification-service-dev.yml — DEV profile overrides.
+
+logging:
+  level:
+    com.hdp: DEBUG
+
+app:
+  info:
+    environment: development
