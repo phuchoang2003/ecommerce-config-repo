@@ -1,0 +1,23 @@
+server:
+  port: ${SERVER_PORT:8761}
+spring:
+  application:
+    name: discovery-service
+
+eureka:
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+
+  server:
+    enable-self-preservation: ${EUREKA_SERVER_ENABLE_SELF_PRESERVATION:true}
+    eviction-interval-timer-in-ms: ${EUREKA_SERVER_EVICTION_INTERVAL_IN_MS:60000}
+
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+#    Config for HA
+#    register-with-eureka: true
+#      fetch-registry: true
+#      service-url:
+#        defaultZone: http://eurekaserver2:8761/eureka/
