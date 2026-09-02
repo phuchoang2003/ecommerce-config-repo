@@ -221,3 +221,4 @@ logging:
     org.apache.kafka:          ${LOGGING_KAFKA:OFF}
     org.springframework.cache: ${LOGGING_CACHE:WARN}
     com.zaxxer.hikari:         INFO
+    net.ttddyy.dsproxy: DEBUG
