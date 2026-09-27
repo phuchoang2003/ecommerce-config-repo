@@ -1,0 +1,102 @@
+## =============================================================================
+## Reference config for hdp-api-gateway — DEFAULT profile (local dev on host).
+##
+## Target path in config-repo:
+##   github.com/phuchoang2003/ecommerce-config-repo
+##     └─ services/hdp-api-gateway/hdp-api-gateway.yml
+##
+## Why this lives remotely, not under src/main/resources:
+##   - Config Server's `search-paths` (see hdp-config-server/application.yml)
+##     includes `services/{application}` — so this file name and folder are
+##     what Config Server looks up at boot.
+##   - Keeping environment-specific values (Eureka URL, ports, secrets) out
+##     of the JAR lets ops rotate them without rebuilding the image.
+##
+## How to apply locally without Config Server (smoke test):
+##   SPRING_CONFIG_IMPORT=classpath:/application.yml,file:./docs/hdp-api-gateway.yml \
+##   ./gradlew :hdp-api-gateway:bootRun
+##   (Spring will overlay the second source on top of the bootstrap one.)
+## =============================================================================
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          ## Auto-create a route per service registered in Eureka, addressed
+          ## as `/{serviceId}/**`. Disabled here so we keep explicit route
+          ## definitions and avoid leaking unrelated services.
+          enabled: false
+          lower-case-service-id: true
+
+      routes:
+        ## ----------------------------------------------------------------
+        ## Customer service
+        ## ----------------------------------------------------------------
+        - id: customer-service
+          uri: lb://HDP-CUSTOMER-SERVICE
+          predicates:
+            - Path=/api/customers/**
+          filters:
+            - StripPrefix=2   # /api/customers/foo → /foo
+
+        ## ----------------------------------------------------------------
+        ## Order service
+        ## ----------------------------------------------------------------
+        - id: order-service
+          uri: lb://HDP-ORDER-SERVICE
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=2
+
+        ## ----------------------------------------------------------------
+        ## Product service
+        ## ----------------------------------------------------------------
+        - id: product-service
+          uri: lb://HDP-PRODUCT-SERVICE
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=2
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+## Actuator — health + info for K8s probes / Prometheus scrape
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    reactor.netty: INFO
+    com.hdp: DEBUG
+
+info:
+  app:
+    name: hdp-api-gateway
+    role: edge
+    description: Spring Cloud Gateway routing to HDP backend services
