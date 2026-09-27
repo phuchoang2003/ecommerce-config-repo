@@ -35,19 +35,19 @@ spring:
           routes:
 
             - id: customer-service
-              uri: lb://HDP-CUSTOMER-SERVICE
+              uri: lb://CUSTOMER-SERVICE
               predicates:
                 - Path=/api/customers/**
               filters:
                 # - StripPrefix=2
 
             - id: order-service
-              uri: lb://HDP-ORDER-SERVICE
+              uri: lb://ORDER-SERVICE
               predicates:
                 - Path=/api/orders/**
 
             - id: product-service
-              uri: lb://HDP-PRODUCT-SERVICE
+              uri: lb://PRODUCT-SERVICE
               predicates:
                 - Path=/api/products/**
               filters:
