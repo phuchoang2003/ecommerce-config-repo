@@ -52,7 +52,7 @@ spring:
           predicates:
             - Path=/api/orders/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
 
         ## ----------------------------------------------------------------
         ## Product service
