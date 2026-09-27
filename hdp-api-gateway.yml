@@ -32,37 +32,37 @@ spring:
           ## definitions and avoid leaking unrelated services.
           enabled: false
           lower-case-service-id: true
+      webflux:
+        routes:
+          ## ----------------------------------------------------------------
+          ## Customer service
+          ## ----------------------------------------------------------------
+          - id: customer-service
+            uri: lb://HDP-CUSTOMER-SERVICE
+            predicates:
+              - Path=/api/customers/**
+            filters:
+              - StripPrefix=2   # /api/customers/foo → /foo
 
-      routes:
-        ## ----------------------------------------------------------------
-        ## Customer service
-        ## ----------------------------------------------------------------
-        - id: customer-service
-          uri: lb://HDP-CUSTOMER-SERVICE
-          predicates:
-            - Path=/api/customers/**
-          filters:
-            - StripPrefix=2   # /api/customers/foo → /foo
+          ## ----------------------------------------------------------------
+          ## Order service
+          ## ----------------------------------------------------------------
+          - id: order-service
+            uri: lb://HDP-ORDER-SERVICE
+            predicates:
+              - Path=/api/orders/**
+            filters:
+              # - StripPrefix=2
 
-        ## ----------------------------------------------------------------
-        ## Order service
-        ## ----------------------------------------------------------------
-        - id: order-service
-          uri: lb://HDP-ORDER-SERVICE
-          predicates:
-            - Path=/api/orders/**
-          filters:
-            # - StripPrefix=2
-
-        ## ----------------------------------------------------------------
-        ## Product service
-        ## ----------------------------------------------------------------
-        - id: product-service
-          uri: lb://HDP-PRODUCT-SERVICE
-          predicates:
-            - Path=/api/products/**
-          filters:
-            - StripPrefix=2
+          ## ----------------------------------------------------------------
+          ## Product service
+          ## ----------------------------------------------------------------
+          - id: product-service
+            uri: lb://HDP-PRODUCT-SERVICE
+            predicates:
+              - Path=/api/products/**
+            filters:
+              - StripPrefix=2
 
 eureka:
   client:
